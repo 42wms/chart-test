@@ -3,7 +3,17 @@ entries:
   zookeeper:
   - apiVersion: v2
     appVersion: 3.8.4
-    created: "2025-12-04T19:31:02.5059681+02:00"
+    created: "2025-12-09T17:33:12.4123827+02:00"
+    description: zookeeper helm chart
+    digest: ecc3be1404efc0e6e12a4d79242188ae5e444e1a464e3f6b6fb572c3a369636d
+    name: zookeeper
+    type: application
+    urls:
+    - https://42wms.github.io/zookeeper-chart-test/zookeeper-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
+    appVersion: 3.8.4
+    created: "2025-12-09T17:33:12.4105762+02:00"
     description: zookeeper helm chart
     digest: 3b5f704c8b1e5aa2600641b287bd5e21426c00c47e66da6482c95c4c917dd257
     name: zookeeper
@@ -11,4 +21,4 @@ entries:
     urls:
     - https://42wms.github.io/zookeeper-chart-test/zookeeper-0.1.0.tgz
     version: 0.1.0
-generated: "2025-12-04T19:31:02.5020025+02:00"
+generated: "2025-12-09T17:33:12.3821615+02:00"
