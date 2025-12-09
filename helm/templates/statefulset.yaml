@@ -91,7 +91,7 @@ spec:
             - name: {{ include "zookeeper.fullname" . }}-script-config
               mountPath: /scripts
             - name: zk-data
-              mountPath: /var/lib/zookeeper/data
+              mountPath: /var/lib/zookeeper
           {{- with .Values.containerSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}

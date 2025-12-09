@@ -64,8 +64,8 @@ nodeSelector: {}
 affinity: {}
 
 podSecurityContext:
-  runAsUser: 1000
-  fsGroup: 1000
+  runAsUser: 1001
+  fsGroup: 1001
 
 containerSecurityContext: {}
 
@@ -85,7 +85,7 @@ config:
   followerPort: 2888
   electionPort: 3888
   dataDir: /var/lib/zookeeper/data
-  dataLogDir: /var/lib/zookeeper/data/log
+  dataLogDir: /var/lib/zookeeper/data
   tickTime: 2000
   initLimit: 10
   syncLimit: 5
