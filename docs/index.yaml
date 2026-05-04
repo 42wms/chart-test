@@ -9,7 +9,7 @@ entries:
     name: zookeeper
     type: application
     urls:
-    - https://42wms.github.io/zookeeper-chart-test/zookeeper-0.1.1.tgz
+    - https://42wms.github.io/chart-test/zookeeper-0.1.1.tgz
     version: 0.1.1
   - apiVersion: v2
     appVersion: 3.8.4
@@ -19,6 +19,6 @@ entries:
     name: zookeeper
     type: application
     urls:
-    - https://42wms.github.io/zookeeper-chart-test/zookeeper-0.1.0.tgz
+    - https://42wms.github.io/chart-test/zookeeper-0.1.0.tgz
     version: 0.1.0
 generated: "2025-12-09T17:33:12.3821615+02:00"
