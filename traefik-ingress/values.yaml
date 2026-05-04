@@ -1,0 +1,78 @@
+# Default values for traefik-ingress.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+ingressRoutes: {}
+#   <ingressRoute name>:
+#     # # To create an Ingress resource
+#     # ingress
+#     #   host: example.com
+#     #   annotations:
+#     #     external-dns.alpha.kubernetes.io/hostname: <ingressRoute name>.<example.com>
+#     #     external-dns.alpha.kubernetes.io/target: <example.com>
+#     routes:
+#       <route name>:
+#         kind: Rule
+#         match: Host(`example.com`) && (PathPrefix(`/prefix`))
+#         services:
+#           <service name>:
+#             port: 4000
+#             name: whoami
+#             sticky:
+#               cookie:
+#                 httpOnly: true
+#                 name: cookie
+#                 sameSite: none
+#                 secure: true
+#         # Acceptable suffixes for middlewares:
+#         #   cors, request-headers, response-headers, strip-prefix, forward-auth, basic-auth
+#         # Middleware parameters can be overwritten in the `ingressRoute.middlewares` section.
+#         middlewares:
+#           <route name>-cors: true
+#           <route name>-request-headers: true
+#           <route name>-response-headers: true
+#           <route name>-strip-prefix: true
+#           <route name>-forward-auth: true
+#           <route name>-basic-auth: true
+#     # Optional list of Traefik entry points.
+#     # Defaults to ["websecure"] when not specified or empty.
+#     entryPoints:
+#       - websecure
+#     tls:
+#       secretName: example-com-tls
+#       redirect: true
+#     # Overwrite middleware parameters
+#     middlewares:
+#       <route name>-cors:
+#         # Default parameters
+#         accessControlAllowHeaders: [ "*" ]
+#         accessControlAllowMethods:
+#           - "GET"
+#           - "POST"
+#           - "OPTIONS"
+#           - "PUT"
+#           - "PATCH"
+#           - "DELETE"
+#         accessControlAllowOriginList: [ "*" ]
+#         accessControlMaxAge: 100
+#         addVaryHeader: true
+#       <route name>-request-headers:
+#         l5d-dst-override: <route service name>.<namespace>:<route service port>
+#       <route name>-response-headers:
+#         <header key>: <header value>
+#       <route name>-strip-prefix:
+#         prefixes:
+#           - /prefix
+#       <route name>-forward-auth:
+#         # Default parameters
+#         address: <url for auth provider middleware>
+#         trustForwardHeader: true
+#         authResponseHeaders:
+#           - 'X-Consumer-Id'
+#       <route name>-basic-auth:
+#         # Default parameters
+#         realm: query
+#         removeHeader: true
+#         secret: <release name>-<ingressRoute name>-auth-secret
+#     # The value must be base64 over htpasswd
+#     basicAuthCreds: ""

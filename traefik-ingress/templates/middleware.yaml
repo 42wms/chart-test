@@ -1,0 +1,148 @@
+{{- range $keyIngressRoute, $valueIngressRoute := .Values.ingressRoutes }}
+{{- range $keyRoute, $valueRoute := .routes }}
+{{- range $keyMiddleware, $valueMiddleware := .middlewares }}
+{{- if and (hasSuffix "cors" $keyMiddleware) $valueMiddleware }}
+{{- $middlewareSpec := include "traefik-ingress.middleware.cors" $ | fromYaml }}
+{{- range $keyMiddlewareOverwrite, $valueMiddlewareOverwrite := $valueIngressRoute.middlewares }}
+{{- if eq $keyMiddleware $keyMiddlewareOverwrite }}
+{{- $middlewareSpec := mergeOverwrite $middlewareSpec $valueMiddlewareOverwrite }}
+{{- end }}
+{{- end }}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "traefik-ingress.name" $ }}-{{ $keyIngressRoute }}-{{ $keyRoute }}-{{ $keyMiddleware }}
+  labels:
+    {{- include "traefik-ingress.labels" $ | nindent 4 }}
+spec:
+  headers:
+    {{- with $middlewareSpec }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}
+{{- if and (hasSuffix "request-headers" $keyMiddleware) $valueMiddleware }}
+{{- $middlewareSpec := (dict) }}
+{{- range $keyMiddlewareOverwrite, $valueMiddlewareOverwrite := $valueIngressRoute.middlewares }}
+{{- if eq $keyMiddleware $keyMiddlewareOverwrite }}
+{{- $middlewareSpec := mergeOverwrite $middlewareSpec $valueMiddlewareOverwrite }}
+{{- end }}
+{{- end }}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "traefik-ingress.name" $ }}-{{ $keyIngressRoute }}-{{ $keyRoute }}-{{ $keyMiddleware }}
+  labels:
+    {{- include "traefik-ingress.labels" $ | nindent 4 }}
+spec:
+  headers:
+    customRequestHeaders:
+      {{- with $middlewareSpec }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+{{- end }}
+{{- if and (hasSuffix "response-headers" $keyMiddleware) $valueMiddleware }}
+{{- $middlewareSpec := (dict) }}
+{{- range $keyMiddlewareOverwrite, $valueMiddlewareOverwrite := $valueIngressRoute.middlewares }}
+{{- if eq $keyMiddleware $keyMiddlewareOverwrite }}
+{{- $middlewareSpec := mergeOverwrite $middlewareSpec $valueMiddlewareOverwrite }}
+{{- end }}
+{{- end }}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "traefik-ingress.name" $ }}-{{ $keyIngressRoute }}-{{ $keyRoute }}-{{ $keyMiddleware }}
+  labels:
+    {{- include "traefik-ingress.labels" $ | nindent 4 }}
+spec:
+  headers:
+    customResponseHeaders:
+      {{- with $middlewareSpec }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+{{- end }}
+{{- if and (hasSuffix "strip-prefix" $keyMiddleware) $valueMiddleware }}
+{{- $middlewareSpec := (dict) }}
+{{- range $keyMiddlewareOverwrite, $valueMiddlewareOverwrite := $valueIngressRoute.middlewares }}
+{{- if eq $keyMiddleware $keyMiddlewareOverwrite }}
+{{- $middlewareSpec := mergeOverwrite $middlewareSpec $valueMiddlewareOverwrite }}
+{{- end }}
+{{- end }}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "traefik-ingress.name" $ }}-{{ $keyIngressRoute }}-{{ $keyRoute }}-{{ $keyMiddleware }}
+  labels:
+    {{- include "traefik-ingress.labels" $ | nindent 4 }}
+spec:
+  stripPrefix:
+    {{- with $middlewareSpec }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}
+{{- if and (hasSuffix "forward-auth" $keyMiddleware) $valueMiddleware }}
+{{- $middlewareSpec := include "traefik-ingress.middleware.forwardAuth" $ | fromYaml }}
+{{- range $keyMiddlewareOverwrite, $valueMiddlewareOverwrite := $valueIngressRoute.middlewares }}
+{{- if eq $keyMiddleware $keyMiddlewareOverwrite }}
+{{- $middlewareSpec := mergeOverwrite $middlewareSpec $valueMiddlewareOverwrite }}
+{{- end }}
+{{- end }}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "traefik-ingress.name" $ }}-{{ $keyIngressRoute }}-{{ $keyRoute }}-{{ $keyMiddleware }}
+  labels:
+    {{- include "traefik-ingress.labels" $ | nindent 4 }}
+spec:
+  forwardAuth:
+    {{- with $middlewareSpec }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}
+{{- if and (hasSuffix "basic-auth" $keyMiddleware) $valueMiddleware }}
+{{- $middlewareSpec := include "traefik-ingress.middleware.basicAuth" $ | fromYaml }}
+{{- range $keyMiddlewareOverwrite, $valueMiddlewareOverwrite := $valueIngressRoute.middlewares }}
+{{- if eq $keyMiddleware $keyMiddlewareOverwrite }}
+{{- $middlewareSpec := mergeOverwrite $middlewareSpec $valueMiddlewareOverwrite }}
+{{- end }}
+{{- end }}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "traefik-ingress.name" $ }}-{{ $keyIngressRoute }}-{{ $keyRoute }}-{{ $keyMiddleware }}
+  labels:
+    {{- include "traefik-ingress.labels" $ | nindent 4 }}
+spec:
+  basicAuth:
+    {{- with $middlewareSpec }}
+    {{- toYaml . | nindent 4 }}
+    {{- if not .secret }}
+    secret: {{ include "traefik-ingress.name" $ }}-{{ $keyIngressRoute }}-auth-secret
+    {{- end }}
+    {{- end }}
+{{- end }}
+{{- end }}
+{{- with $valueIngressRoute.tls }}
+{{- if .redirect | default false }}
+{{- $middlewareSpec := include "traefik-ingress.middleware.tlsRedirect" $ | fromYaml }}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "traefik-ingress.name" $ }}-{{ $keyIngressRoute }}-{{ $keyRoute }}-tls-redirect
+  labels:
+  {{- include "traefik-ingress.labels" $ | nindent 4 }}
+spec:
+  redirectScheme:
+    {{- with $middlewareSpec }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

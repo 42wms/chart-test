@@ -1,0 +1,19 @@
+{{- range $keyIngressRoute, $valueIngressRoute := .Values.ingressRoutes }}
+{{- with .ingress }}
+{{- with .annotations }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "traefik-ingress.name" $ }}-{{ $keyIngressRoute }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  labels:
+    {{- include "traefik-ingress.labels" $ | nindent 4 }}
+spec:
+  rules:
+    {{- $_ := required (printf "ingressRoutes.ingressRoute.ingress.host value required") $valueIngressRoute.ingress.host }}
+    - host: {{ $valueIngressRoute.ingress.host }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,80 @@
+{{- range $keyIngressRoute, $valueIngressRoute := .Values.ingressRoutes }}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "traefik-ingress.name" $ }}-{{ $keyIngressRoute }}
+  {{- with .annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "traefik-ingress.labels" $ | nindent 4 }}
+spec:
+  entryPoints:
+  {{- if (empty .entryPoints) }}
+    - websecure
+  {{- else }}
+    {{- toYaml .entryPoints | nindent 4 }}
+  {{- end }}
+  routes:
+    {{- range $keyRoute, $valueRoute := .routes }}
+    - kind: {{ .kind }}
+      match: {{ .match }}
+      {{- with .services }}
+      services:
+        {{- range $keyPort, $valuePort := . }}
+        - name: {{ $keyPort }}
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- end }}
+      {{- with .priority }}
+      priority: {{ . }}
+      {{- end }}
+      {{- with .middlewares }}
+      middlewares:
+        {{- range $keyMiddleware, $valueMiddleware := . }}
+        {{- if $valueMiddleware }}
+        - name: {{ include "traefik-ingress.name" $ }}-{{ $keyIngressRoute }}-{{ $keyRoute }}-{{ $keyMiddleware }}
+        {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- with .tls }}
+  {{- with .secretName }}
+  tls:
+    secretName: {{ . }}
+  {{- end }}
+  {{- end }}
+{{- with .tls }}
+{{- if .redirect | default false }}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "traefik-ingress.name" $ }}-{{ $keyIngressRoute }}-tls-redirect
+  labels:
+    {{- include "traefik-ingress.labels" $ | nindent 4 }}
+spec:
+  entryPoints:
+    - web
+  routes:
+    {{- range $keyRoute, $valueRoute := $valueIngressRoute.routes }}
+    - kind: {{ .kind }}
+      match: {{ .match }}
+      {{- with .services }}
+      services:
+        {{- range $keyPort, $valuePort := . }}
+        - name: {{ $keyPort }}
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- end }}
+      {{- with .priority }}
+      priority: {{ . }}
+      {{- end }}
+      middlewares:
+        - name: {{ include "traefik-ingress.name" $ }}-{{ $keyIngressRoute }}-{{ $keyRoute }}-tls-redirect
+    {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
