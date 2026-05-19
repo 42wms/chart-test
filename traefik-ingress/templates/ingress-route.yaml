@@ -28,6 +28,7 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
       {{- end }}
+      syntax: {{ $valueIngressRoute.syntax | default "v2" }}
       {{- with .priority }}
       priority: {{ . }}
       {{- end }}

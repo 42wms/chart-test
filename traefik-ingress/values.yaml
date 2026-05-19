@@ -34,6 +34,8 @@ ingressRoutes: {}
 #           <route name>-strip-prefix: true
 #           <route name>-forward-auth: true
 #           <route name>-basic-auth: true
+#     # Defaults to ["v2"] when not specified or empty.
+#     syntax: v2
 #     # Optional list of Traefik entry points.
 #     # Defaults to ["websecure"] when not specified or empty.
 #     entryPoints:
