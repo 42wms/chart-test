@@ -1,0 +1,6 @@
+dependencies:
+- name: app-crd
+  repository: ""
+  version: 0.1.0
+digest: sha256:605e9a4514fbf1cc6495e6058c0388244bf2ea3266146491eef3d4db7ca7613b
+generated: "2023-05-22T08:57:54.002228+02:00"

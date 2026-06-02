@@ -1,0 +1,4 @@
+{{- range .Values.global.CRDs }}
+---
+{{ toYaml . }}
+{{- end }}

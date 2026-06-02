@@ -1,0 +1,286 @@
+# installCRDs determines whether Custom Resource Definitions (CRD) are installed by the chart.
+# Note that CRDs are global resources and require cluster admin privileges to install.
+installCRDs: false
+
+# list of CRDs for current app via dependence chart.
+global:
+  CRDs: []
+# For example:
+#    - apiVersion: apiextensions.k8s.io/v1
+#      kind: CustomResourceDefinition
+#      metadata:
+#        annotations:
+#          controller-gen.kubebuilder.io/version: v0.11.3
+#        creationTimestamp: null
+#        . . .
+
+affinity: {}
+
+# Common annotations for all resources
+annotations: {}
+
+args: []
+
+# Common values for cluster role and binding
+clusterRole:
+  create: false
+  # Common annotations for cluster role and binding
+  annotations: {}
+  # Common labels for all cluster role and binding
+  labels: {}
+  rules: []
+#    - apiGroups:
+#        - ""
+#      resources:
+#        - services
+#      verbs:
+#        - 'get'
+#        - 'list'
+#        - 'watch'
+
+command: []
+
+# Common values for all config maps
+configMap:
+  # Common annotations for all config maps
+  annotations: {}
+  # Common labels for all config maps
+  labels: {}
+
+# Defining deployment type as a Deployment (job must be false)
+deployment: true
+
+env: {}
+#  FOO: bar
+#  FROM_SECRET:
+#    secretKeyRef:
+#      name: secretName
+#      key: secretKey
+
+envSecret: {}
+
+envFrom: {}
+#  - secretRef:
+#      name: env-secret
+#  - configMapRef:
+#      name: env-configmap
+
+hostAliases: []
+#  - ip: "127.0.0.1"
+#    hostnames:
+#      - "foo.local"
+#      - "bar.local"
+#  - ip: "10.1.2.3"
+#    hostnames:
+#      - "foo.remote"
+#      - "bar.remote"
+
+image:
+  repository: ""
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+#  - name: container-registry-credentials
+
+# use this construction to enable jaeger agent sidecar inject
+# https://www.jaegertracing.io/docs/1.25/operator/#manually-defining-jaeger-agent-sidecars
+jaegerAgent:
+  enabled: false
+  namespace: observability
+  version: 1.22.0
+  ports:
+    - containerPort: 5775
+      name: zk-compact-trft
+      protocol: UDP
+    - containerPort: 5778
+      name: config-rest
+      protocol: TCP
+    - containerPort: 6831
+      name: jg-compact-trft
+      protocol: UDP
+    - containerPort: 6832
+      name: jg-binary-trft
+      protocol: UDP
+    - containerPort: 14271
+      name: admin-http
+      protocol: TCP
+
+# Defining deployment type as a Job (deployment must be false)
+job: false
+
+jobLimits:
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 4
+
+# Common labels for all resources
+labels: {}
+
+lifecycle: {}
+#  postStart:
+#    exec:
+#      command: ["sleep", "10"]
+#  preStop:
+#    exec:
+#      command: ["sleep", "10"]
+
+livenessProbe: {}
+
+nodeSelector: {}
+
+podAnnotations:
+  linkerd.io/inject: enabled
+  # use this construction to disable linkerd inject
+  # linkerd.io/inject: disabled
+  # configured log level for linkerd init container and linkerd2_proxy container
+  # config.linkerd.io/proxy-log-level: warn,linkerd2_proxy=info
+  # Outbound ports that should skip the proxy. Comma-separated list of values, where each value can be a port number or a range a-b
+  # config.linkerd.io/skip-outbound-ports: "<port>"
+  # full configuration list: https://linkerd.io/2.10/reference/proxy-configuration/
+
+# Common labels for all pods
+podLabels: {}
+
+podSecurityContext: {}
+#  fsGroup: 2000
+
+ports: []
+#  - name: http-grpc
+#    containerPort: 50051
+#    protocol: TCP
+
+readinessProbe: {}
+
+replicaCount: 1
+
+# We usually recommend not to specify default resources and to leave this as a conscious
+# choice for the user. This also increases chances charts run on environments with little
+# resources, such as Minikube. If you do want to specify resources, uncomment the following
+# lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+resources: {}
+#  limits:
+#    cpu: 100m
+#    memory: 128Mi
+#  requests:
+#    cpu: 100m
+#    memory: 128Mi
+
+# Do not restarting container after finished, used Never
+restartPolicy: Never
+
+# Common values for role and binding
+role:
+  create: false
+  # Common annotations for role and binding
+  annotations: {}
+  # Common labels for all role and binding
+  labels: {}
+  rules: []
+#    - apiGroups:
+#        - ""
+#      resources:
+#        - services
+#      verbs:
+#        - 'get'
+#        - 'list'
+#        - 'watch'
+
+# Common values for all secrets
+secret:
+  # Common annotations for all secrets
+  annotations: {}
+  # Common labels for all secrets
+  labels: {}
+
+securityContext: {}
+#  capabilities:
+#    drop:
+#      - ALL
+#  readOnlyRootFilesystem: true
+#  runAsNonRoot: true
+#  runAsUser: 1000
+
+service:
+  enable: false
+  type: ClusterIP
+  ports: []
+#    - port: 50051
+#      targetPort: 50051
+#      protocol: TCP
+#      name: http-grpc
+  # Common annotations for service
+  annotations: {}
+  # Common labels for service
+  labels: {}
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Common annotations for service account
+  annotations: {}
+  # Image pull secrets for authenticating to private container registries like AWS ECR
+  imagePullSecrets: []
+#    - name: container-registry-credentials
+  # Common labels for service account
+  labels: {}
+
+strategy:
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+  type: RollingUpdate
+
+tolerations: []
+
+volumesConfigMap:
+  enable: false
+  volumes: []
+#    - name: config
+#      files:
+#        - name: config.json
+#          data: |
+#            {}
+
+volumesExistingConfigMap:
+  enable: false
+  volumes: []
+#    - name: config
+
+volumesExistingSecret:
+  enable: false
+  volumes: []
+#    - name: secret
+
+volumesHostPathMap:
+  enable: false
+  volumes: []
+#    - name: config
+#      path: /config
+#      type: DirectoryOrCreate
+
+volumeMounts: []
+#  - name: config
+#    mountPath: /config
+#    readOnly: true
+#    # NEW
+#    # Possible values are `Enabled`, `IfPossible`, and `Disabled`.
+#    # Needs to be specified in conjunction with `readOnly: true`.
+#    # https://kubernetes.io/blog/2024/04/23/recursive-read-only-mounts/#availability
+#    recursiveReadOnly: Enabled
+
+volumesSecret:
+  enable: false
+  volumes: []
+#    - name: config
+#      type: "" # by default: Opaque
+#      files:
+#        - name: config.json
+#          data: |
+#            {}
+
+# Common values for workloads (deployment, job)
+workload:
+  # Common annotations for all workloads
+  annotations: {}
+  # Common labels for all workloads
+  labels: {}

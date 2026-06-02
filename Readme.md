@@ -6,6 +6,7 @@ add helmchart new version
 ```bash
 helm package ./traefik-ingress --destination ./docs
 helm package ./zookeeper --destination ./docs
+helm package ./app --destination ./docs
 ```
 
 update `index.yaml`

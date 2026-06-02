@@ -1,0 +1,223 @@
+{{- if or .Values.deployment .Values.job }}
+{{- if .Values.job }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "app.name" . }}-{{ randAlphaNum 5 | lower }}
+{{- else }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "app.name" . }}
+{{- end }}
+  {{- if or .Values.annotations .Values.workload.annotations }}
+  annotations:
+    {{- with .Values.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.workload.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+    {{- with .Values.workload.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  {{- if .Values.job }}
+  {{- with .Values.jobLimits }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+  {{- else }}
+  replicas: {{ .Values.replicaCount }}
+  {{- with .Values.strategy }}
+  strategy:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "app.selectorLabels" . | nindent 6 }}
+  {{- end }}
+  template:
+    metadata:
+      {{- if or .Values.annotations .Values.podAnnotations .Values.volumesConfigMap.enable .Values.envSecret }}
+      annotations:
+        {{- with .Values.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.volumesConfigMap.enable }}
+        checksum/configmap: {{ include (print .Template.BasePath "/config-map.yaml") . | sha256sum }}
+        {{- end }}
+        {{- if .Values.envSecret }}
+        checksum/secret: {{ include (print .Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- end }}
+      {{- end }}
+      labels:
+        {{- include "app.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.job }}
+      restartPolicy: {{ .Values.restartPolicy }}
+      {{- end }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "app.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.hostAliases }}
+      hostAliases:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        {{- if .Values.jaegerAgent.enabled }}
+        - name: jaeger-agent
+          image: "jaegertracing/jaeger-agent:{{ .Values.jaegerAgent.version }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+          {{- range .Values.jaegerAgent.ports }}
+            - name: {{ .name }}
+              containerPort: {{ .containerPort }}
+              protocol: {{ .protocol }}
+          {{- end }}
+          args:
+            - --reporter.grpc.host-port=dns:///jaeger-collector-headless.{{ .Values.jaegerAgent.namespace }}:14250
+            - --reporter.type=grpc
+        {{- end }}
+
+        - name: {{ include "app.name" . }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: {{ toJson .Values.command }}
+          args: {{ toJson .Values.args }}
+          {{- if or .Values.envFrom .Values.envSecret }}
+          envFrom:
+            {{- with .Values.envSecret }}
+            - secretRef:
+                name: {{ template "app.name" $ }}-env-secret
+            {{- end }}
+            {{- with .Values.envFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+          {{- with .Values.env }}
+          env:
+          {{- range $name, $value := . }}
+            {{- $_ := required (printf "%s value required" $name) $value }}
+            {{- if kindIs "map" $value }}
+            - name: {{ $name | quote }}
+              valueFrom:
+                {{- toYaml $value | nindent 16 }}
+            {{- end }}
+          {{- end }}
+          {{- range $name, $value := . }}
+            {{- $_ := required (printf "%s value required" $name) $value }}
+            {{- if not (kindIs "map" $value) }}
+            - name: {{ $name | quote }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- with .Values.ports }}
+          ports:
+          {{- range . }}
+            - name: {{ .name }}
+              containerPort: {{ .containerPort }}
+              protocol: {{ .protocol }}
+          {{- end }}
+          {{- end }}
+          {{- with .Values.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- if or .Values.volumesConfigMap.enable .Values.volumesExistingConfigMap.enable .Values.volumesExistingSecret.enable .Values.volumesSecret.enable .Values.volumesHostPathMap.enable }}
+      volumes:
+        {{- if .Values.volumesConfigMap.enable }}
+        {{- with .Values.volumesConfigMap.volumes }}
+        {{- range . }}
+        - name: {{ .name }}
+          configMap:
+            name: {{ template "app.name" $ }}-file-{{ .name }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.volumesExistingConfigMap.enable }}
+        {{- with .Values.volumesExistingConfigMap.volumes }}
+        {{- range . }}
+        - name: {{ .name }}
+          configMap:
+            name: {{ .name }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.volumesExistingSecret.enable }}
+        {{- with .Values.volumesExistingSecret.volumes }}
+        {{- range . }}
+        - name: {{ .name }}
+          secret:
+            secretName: {{ .name }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.volumesSecret.enable }}
+        {{- with .Values.volumesSecret.volumes }}
+        {{- range . }}
+        - name: {{ .name }}
+          secret:
+            secretName: {{ template "app.name" $ }}-file-{{ .name }}-secret
+        {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.volumesHostPathMap.enable }}
+        {{- with .Values.volumesHostPathMap.volumes }}
+        {{- range . }}
+        - name: {{ .name }}
+          hostPath:
+            path: {{ .path }}
+            type: {{ .type }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

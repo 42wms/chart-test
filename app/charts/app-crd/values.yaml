@@ -1,0 +1,4 @@
+# Globals meant for internal use only
+global:
+  # list of CRDs
+  CRDs: []
