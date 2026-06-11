@@ -259,8 +259,8 @@ volumesHostPathMap:
 #      type: DirectoryOrCreate
 
 volumeMounts: []
-#  - name: config
-#    mountPath: /config
+#  - name: data
+#    mountPath: /data
 #    readOnly: true
 #    # NEW
 #    # Possible values are `Enabled`, `IfPossible`, and `Disabled`.
@@ -284,3 +284,56 @@ workload:
   annotations: {}
   # Common labels for all workloads
   labels: {}
+
+# initContainers
+initContainers: {}
+  # dataCotainer:
+  #   # Container launch order, from 0 to 99
+  #   order: 10
+  #   # Setting restartPolicy: "Always" makes this a sidecar container.
+  #   # Defaults to "OnFailure" when not specified or empty.
+  #   restartPolicy: Always
+  #   securityContext: {}
+  #     # capabilities:
+  #     #   drop:
+  #     #     - ALL
+  #     # readOnlyRootFilesystem: true
+  #     # runAsNonRoot: true
+  #     # runAsUser: 1000
+  #   image:
+  #     repository: ""
+  #     pullPolicy: IfNotPresent
+  #     tag: ""
+  #   command: []
+  #   args: []
+  #   envFrom: []
+  #     # - secretRef:
+  #     #     name: env-secret
+  #     # - configMapRef:
+  #     #     name: env-configmap
+  #   env: {}
+  #     # FOO: bar
+  #     # FROM_SECRET:
+  #     #   secretKeyRef:
+  #     #     name: secretName
+  #     #     key: secretKey
+  #   ports: []
+  #     # - name: http-grpc
+  #     #   containerPort: 50051
+  #     #   protocol: TCP
+  #   lifecycle: {}
+  #     # postStart:
+  #     #   exec:
+  #     #     command: ["sleep", "10"]
+  #     # preStop:
+  #     #   exec:
+  #     #     command: ["sleep", "10"]
+  #   livenessProbe: {}
+  #   readinessProbe: {}
+  #   volumeMounts: []
+  #     # - name: data
+  #     #   mountPath: /data
+
+sharedVolumes: {}
+  # data:
+  #   emptyDir: {}

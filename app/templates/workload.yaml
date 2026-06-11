@@ -78,6 +78,10 @@ spec:
       hostAliases:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.initContainers }}
+      initContainers:
+        {{- include "initContainers.sorted" $ | nindent 8 }}
+      {{- end }}
       containers:
         {{- if .Values.jaegerAgent.enabled }}
         - name: jaeger-agent
@@ -159,7 +163,7 @@ spec:
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- if or .Values.volumesConfigMap.enable .Values.volumesExistingConfigMap.enable .Values.volumesExistingSecret.enable .Values.volumesSecret.enable .Values.volumesHostPathMap.enable }}
+      {{- if or .Values.volumesConfigMap.enable .Values.volumesExistingConfigMap.enable .Values.volumesExistingSecret.enable .Values.volumesSecret.enable .Values.volumesHostPathMap.enable .Values.sharedVolumes }}
       volumes:
         {{- if .Values.volumesConfigMap.enable }}
         {{- with .Values.volumesConfigMap.volumes }}
@@ -206,6 +210,9 @@ spec:
             type: {{ .type }}
         {{- end }}
         {{- end }}
+        {{- end }}
+        {{- if .Values.sharedVolumes }}
+        {{- include "sharedVolumes.spec" $ | nindent 8 }}
         {{- end }}
       {{- end }}
       {{- with .Values.nodeSelector }}
