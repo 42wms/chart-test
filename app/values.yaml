@@ -21,6 +21,12 @@ annotations: {}
 
 args: []
 
+# automountServiceAccountToken controls whether the SA token is auto-mounted
+# into the pod. Set to false to harden pods that don't call the K8s API.
+# Leave empty ("") to inherit cluster/ServiceAccount default.
+automountServiceAccountToken: ""
+# automountServiceAccountToken: false
+
 # Common values for cluster role and binding
 clusterRole:
   create: false
@@ -50,6 +56,33 @@ configMap:
 # Defining deployment type as a Deployment (job must be false)
 deployment: true
 
+# dnsPolicy sets how DNS is resolved for the pod.
+# Valid values: "ClusterFirst" (default), "ClusterFirstWithHostNet",
+# "Default", "None". Use "None" when supplying a fully custom dnsConfig.
+# When hostNetwork is true, prefer "ClusterFirstWithHostNet".
+dnsPolicy: ""
+# dnsPolicy: "ClusterFirstWithHostNet"
+
+# dnsConfig provides custom DNS settings, merged with dnsPolicy (or used
+# standalone when dnsPolicy is "None"). Useful for tuning ndots or adding
+# extra nameservers/search domains.
+dnsConfig: {}
+#   nameservers:
+#     - "1.1.1.1"
+#   searches:
+#     - "ns1.svc.cluster.local"
+#   options:
+#     - name: ndots
+#       value: "2"
+#     - name: edns0
+
+# enableServiceLinks injects every Service in the namespace as env vars
+# (Docker-link style). Defaults to true in K8s; set false to avoid env
+# clutter and speed up pod startup in namespaces with many services.
+# Leave empty ("") to keep the cluster default.
+enableServiceLinks: ""
+# enableServiceLinks: false
+
 env: {}
 #  FOO: bar
 #  FROM_SECRET:
@@ -75,6 +108,39 @@ hostAliases: []
 #      - "foo.remote"
 #      - "bar.remote"
 
+# hostIPC shares the host's IPC namespace with the pod. Only for workloads
+# that need host-level shared memory (e.g. some monitoring/HPC tools).
+# Security-sensitive — keep false unless required.
+# By default: false
+hostIPC: ""
+
+# hostname sets an explicit hostname inside the pod instead of the
+# system-assigned one. Note: with replicas > 1 all pods share this name,
+# so this fits single-replica use cases.
+hostname: ""
+
+# hostnameOverride sets an arbitrary FQDN as the pod's hostname (alpha,
+# K8s 1.34+). Requires the HostnameOverride feature gate to be enabled,
+# otherwise the API rejects the pod. Takes precedence over hostname/subdomain.
+hostnameOverride: ""
+
+# hostNetwork attaches the pod directly to the node's network namespace.
+# The pod then uses the host's IPs/ports. Security-sensitive and can cause
+# port conflicts; pair with dnsPolicy "ClusterFirstWithHostNet".
+# By default: false
+hostNetwork: ""
+
+# hostPID shares the host's PID namespace, making host processes visible
+# inside the pod. Only for node-level agents/debuggers. Security-sensitive.
+# By default: false
+hostPID: ""
+
+# hostUsers controls user-namespace isolation. Set false to enable a
+# dedicated user namespace so in-container root maps to an unprivileged
+# host UID (stronger isolation). Empty/true keeps host user namespace.
+# By default: true
+hostUsers: ""
+
 image:
   repository: ""
   pullPolicy: IfNotPresent
@@ -89,6 +155,8 @@ jaegerAgent:
   enabled: false
   namespace: observability
   version: 1.22.0
+  image:
+    pullPolicy: IfNotPresent
   ports:
     - containerPort: 5775
       name: zk-compact-trft
@@ -112,6 +180,80 @@ job: false
 jobLimits:
   ttlSecondsAfterFinished: 600
   backoffLimit: 4
+
+initContainers: {}
+  # dataCotainer:
+  #   # Container launch order, from 0 to 99
+  #   order: 10
+  #   # resizePolicy controls behavior for in-place resource resize (beta 1.33+).
+  #   # Per-resource: choose whether a CPU/memory change can be applied live
+  #   # or requires a container restart.
+  #   # Empty = default ("NotRequired" for cpu, "RestartContainer" for memory).
+  #   resizePolicy: []
+  #     # - resourceName: cpu
+  #     #   restartPolicy: NotRequired
+  #     # - resourceName: memory
+  #     #   restartPolicy: RestartContainer
+  #   # Setting restartPolicy: "Always" makes this a sidecar container.
+  #   # Defaults to "OnFailure" when not specified or empty.
+  #   restartPolicy: Always
+  #   # restartPolicyRules gives fine-grained, per-exit-code restart control
+  #   # (K8s 1.36+). Evaluated in order against the container's exit code to
+  #   # decide whether it restarts. Useful for treating specific codes as
+  #   # success/failure independently of the pod restartPolicy.
+  #   restartPolicyRules: []
+  #     # - action: Restart
+  #     #   exitCodes:
+  #     #     operator: In
+  #     #     values:
+  #     #       - 42
+  #     # - action: Restart
+  #     #   exitCodes:
+  #     #     operator: NotIn
+  #     #     values:
+  #     #       - 0
+  #   securityContext: {}
+  #     # capabilities:
+  #     #   drop:
+  #     #     - ALL
+  #     # readOnlyRootFilesystem: true
+  #     # runAsNonRoot: true
+  #     # runAsUser: 1000
+  #   image:
+  #     repository: ""
+  #     pullPolicy: IfNotPresent
+  #     tag: ""
+  #   command: []
+  #   args: []
+  #   envFrom: []
+  #     # - secretRef:
+  #     #     name: env-secret
+  #     # - configMapRef:
+  #     #     name: env-configmap
+  #   env: {}
+  #     # FOO: bar
+  #     # FROM_SECRET:
+  #     #   secretKeyRef:
+  #     #     name: secretName
+  #     #     key: secretKey
+  #   ports: []
+  #     # - name: http-grpc
+  #     #   containerPort: 50051
+  #     #   protocol: TCP
+  #   lifecycle: {}
+  #     # postStart:
+  #     #   exec:
+  #     #     command: ["sleep", "10"]
+  #     # preStop:
+  #     #   exec:
+  #     #     command: ["sleep", "10"]
+  #   livenessProbe: {}
+  #   readinessProbe: {}
+  #   startupProbe: {}
+  #   volumeMounts: []
+  #     # - name: data
+  #     #   mountPath: /data
+  #   workingDir: ""
 
 # Common labels for all resources
 labels: {}
@@ -149,9 +291,23 @@ ports: []
 #    containerPort: 50051
 #    protocol: TCP
 
+# priorityClassName assigns a PriorityClass, influencing scheduling order
+# and preemption. The named PriorityClass must already exist in the cluster.
+priorityClassName: ""
+
 readinessProbe: {}
 
 replicaCount: 1
+
+# resizePolicy controls behavior for in-place resource resize (beta 1.33+).
+# Per-resource: choose whether a CPU/memory change can be applied live
+# or requires a container restart.
+# Empty = default ("NotRequired" for cpu, "RestartContainer" for memory).
+resizePolicy: []
+#   - resourceName: cpu
+#     restartPolicy: NotRequired
+#   - resourceName: memory
+#     restartPolicy: RestartContainer
 
 # We usually recommend not to specify default resources and to leave this as a conscious
 # choice for the user. This also increases chances charts run on environments with little
@@ -165,8 +321,35 @@ resources: {}
 #    cpu: 100m
 #    memory: 128Mi
 
+# resourceClaims references ResourceClaims/Templates for Dynamic Resource
+# Allocation (e.g. GPUs, specialized hardware). Claims declared here are
+# then referenced by name in a container's resources.claims.
+resourceClaims: []
+#   - name: gpu-claim
+#     resourceClaimTemplateName: gpu-template
+#   # then in the container spec:
+#   #   resources:
+#   #     claims:
+#   #       - name: gpu-claim
+
 # Do not restarting container after finished, used Never
 restartPolicy: Never
+
+# restartPolicyRules gives fine-grained, per-exit-code restart control
+# (K8s 1.36+). Evaluated in order against the container's exit code to
+# decide whether it restarts. Useful for treating specific codes as
+# success/failure independently of the pod restartPolicy.
+restartPolicyRules: []
+#   - action: Restart
+#     exitCodes:
+#       operator: In
+#       values:
+#         - 42
+#   - action: Restart
+#     exitCodes:
+#       operator: NotIn
+#       values:
+#         - 0
 
 # Common values for role and binding
 role:
@@ -184,6 +367,12 @@ role:
 #        - 'get'
 #        - 'list'
 #        - 'watch'
+
+# runtimeClassName selects a non-default container runtime (e.g. gVisor,
+# Kata Containers) for sandboxing/isolation. The RuntimeClass must exist
+# in the cluster. Empty uses the default runtime.
+runtimeClassName: ""
+#  runtimeClassName: "gvisor"
 
 # Common values for all secrets
 secret:
@@ -224,13 +413,52 @@ serviceAccount:
   # Common labels for service account
   labels: {}
 
+# startupProbe gives slow-starting containers time to come up before
+# liveness/readiness probes begin. While it runs, the other probes are
+# disabled. failureThreshold * periodSeconds = max allowed startup time.
+startupProbe: {}
+#   httpGet:
+#     path: /healthz
+#     port: 8080
+#   failureThreshold: 30
+#   periodSeconds: 10
+#   # # exec / tcpSocket / grpc are also supported:
+#   # exec:
+#   #   command:
+#   #     - cat
+#   #     - /tmp/ready
+
 strategy:
   rollingUpdate:
     maxSurge: 1
     maxUnavailable: 0
   type: RollingUpdate
 
+# terminationGracePeriodSeconds is how long K8s waits after SIGTERM before
+# sending SIGKILL during pod shutdown. Increase for apps needing clean
+# draining (databases, queues, long requests).
+# By default: 30
+terminationGracePeriodSeconds: ""
+#  terminationGracePeriodSeconds: 60
+
 tolerations: []
+
+# topologySpreadConstraints spread pods across failure domains (zones,
+# nodes) for HA. labelSelector should match this workload's pod labels.
+topologySpreadConstraints: []
+#  topologySpreadConstraints:
+#    - maxSkew: 1
+#      topologyKey: topology.kubernetes.io/zone
+#      whenUnsatisfiable: DoNotSchedule
+#      labelSelector:
+#        matchLabels:
+#          app.kubernetes.io/name: my-app
+#    - maxSkew: 1
+#      topologyKey: kubernetes.io/hostname
+#      whenUnsatisfiable: ScheduleAnyway
+#      labelSelector:
+#        matchLabels:
+#          app.kubernetes.io/name: my-app
 
 volumesConfigMap:
   enable: false
@@ -278,6 +506,11 @@ volumesSecret:
 #          data: |
 #            {}
 
+# workingDir overrides the container's working directory. If empty, the
+# image's default (WORKDIR) is used. Must be an absolute path.
+workingDir: ""
+#  workingDir: "/app"
+
 # Common values for workloads (deployment, job)
 workload:
   # Common annotations for all workloads
@@ -285,55 +518,37 @@ workload:
   # Common labels for all workloads
   labels: {}
 
-# initContainers
-initContainers: {}
-  # dataCotainer:
-  #   # Container launch order, from 0 to 99
-  #   order: 10
-  #   # Setting restartPolicy: "Always" makes this a sidecar container.
-  #   # Defaults to "OnFailure" when not specified or empty.
-  #   restartPolicy: Always
-  #   securityContext: {}
-  #     # capabilities:
-  #     #   drop:
-  #     #     - ALL
-  #     # readOnlyRootFilesystem: true
-  #     # runAsNonRoot: true
-  #     # runAsUser: 1000
-  #   image:
-  #     repository: ""
-  #     pullPolicy: IfNotPresent
-  #     tag: ""
-  #   command: []
-  #   args: []
-  #   envFrom: []
-  #     # - secretRef:
-  #     #     name: env-secret
-  #     # - configMapRef:
-  #     #     name: env-configmap
-  #   env: {}
-  #     # FOO: bar
-  #     # FROM_SECRET:
-  #     #   secretKeyRef:
-  #     #     name: secretName
-  #     #     key: secretKey
-  #   ports: []
-  #     # - name: http-grpc
-  #     #   containerPort: 50051
-  #     #   protocol: TCP
-  #   lifecycle: {}
-  #     # postStart:
-  #     #   exec:
-  #     #     command: ["sleep", "10"]
-  #     # preStop:
-  #     #   exec:
-  #     #     command: ["sleep", "10"]
-  #   livenessProbe: {}
-  #   readinessProbe: {}
-  #   volumeMounts: []
-  #     # - name: data
-  #     #   mountPath: /data
-
+# sharedVolumes is a free-form passthrough for any pod volume not covered by
+# the dedicated volumesConfigMap, volumesSecret and volumesHostPath sources.
+# It's a map of volume-name -> raw volume source, rendered verbatim into the
+# pod's volumes list. Use it for emptyDir, projected, ephemeral, PVC, CSI,
+# downwardAPI, etc.
+# Mount the volume in a container via its volumeMounts.
 sharedVolumes: {}
+  # cache:
+  #   emptyDir: {}
+  # config:
+  #   projected:
+  #     sources:
+  #       - configMap:
+  #           name: my-config
+  #       - secret:
+  #           name: my-secret
+  # persistent:
+  #   persistentVolumeClaim:
+  #     claimName: my-pvc
+  # # example for data container
   # data:
   #   emptyDir: {}
+  # # ...add then in the initContainers:
+  # # initContainers:
+  # #   dataContainer:
+  # #     ...
+  # #     volumeMounts:
+  # #       - name: data
+  # #         mountPath: /data
+  # # ...and the app container mounts the same volume read-only:
+  # # volumeMounts:
+  # #   - name: data
+  # #     mountPath: /data
+  # #     readOnly: true

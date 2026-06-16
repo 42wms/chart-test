@@ -2,7 +2,21 @@ apiVersion: v1
 entries:
   app:
   - apiVersion: v2
-    created: "2026-06-02T11:15:52.7533413+03:00"
+    created: "2026-06-16T19:07:13.2546907+03:00"
+    dependencies:
+    - condition: installCRDs
+      name: app-crd
+      repository: ""
+      version: 0.1.0
+    description: A Helm chart for Kubernetes
+    digest: 54360e429f52aad4641a164a918de959828098dc7b623c107546b107972d916f
+    name: app
+    type: application
+    urls:
+    - https://42wms.github.io/chart-test/app-2.2.0.tgz
+    version: 2.2.0
+  - apiVersion: v2
+    created: "2026-06-16T19:07:13.2546907+03:00"
     dependencies:
     - condition: installCRDs
       name: app-crd
@@ -17,7 +31,7 @@ entries:
     version: 2.1.0
   traefik-ingress:
   - apiVersion: v2
-    created: "2026-06-02T11:15:52.7724925+03:00"
+    created: "2026-06-16T19:07:13.2695891+03:00"
     description: A Helm chart for Kubernetes
     digest: 559e4f8f80c9aef90bfb9d6ec7c7e53be6ae53b28d115862cabe1e063f9f7778
     name: traefik-ingress
@@ -26,7 +40,7 @@ entries:
     - https://42wms.github.io/chart-test/traefik-ingress-4.1.1.tgz
     version: 4.1.1
   - apiVersion: v2
-    created: "2026-06-02T11:15:52.7686248+03:00"
+    created: "2026-06-16T19:07:13.2665279+03:00"
     description: A Helm chart for Kubernetes
     digest: 12ffaa17d2c0848ec669cd56904207298aaed69e91deeffc17c815c6661c95c0
     name: traefik-ingress
@@ -35,7 +49,7 @@ entries:
     - https://42wms.github.io/chart-test/traefik-ingress-4.1.0.tgz
     version: 4.1.0
   - apiVersion: v2
-    created: "2026-06-02T11:15:52.7645779+03:00"
+    created: "2026-06-16T19:07:13.2619568+03:00"
     description: A Helm chart for Kubernetes
     digest: 8197b97eb2b7d9dbad82bb9c67d9a0dd46c0fe92fc5af0b02567f0cc2e8c04d4
     name: traefik-ingress
@@ -44,7 +58,7 @@ entries:
     - https://42wms.github.io/chart-test/traefik-ingress-4.0.0.tgz
     version: 4.0.0
   - apiVersion: v2
-    created: "2026-06-02T11:15:52.7610613+03:00"
+    created: "2026-06-16T19:07:13.2592349+03:00"
     description: A Helm chart for Kubernetes
     digest: 885630b3683e343f9096d85191d80cb9978d8a3501d92be92ca9ed51db03444e
     name: traefik-ingress
@@ -55,7 +69,7 @@ entries:
   zookeeper:
   - apiVersion: v2
     appVersion: 3.8.4
-    created: "2026-06-02T11:15:52.7816926+03:00"
+    created: "2026-06-16T19:07:13.2795779+03:00"
     description: zookeeper helm chart
     digest: ecc3be1404efc0e6e12a4d79242188ae5e444e1a464e3f6b6fb572c3a369636d
     name: zookeeper
@@ -65,7 +79,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 3.8.4
-    created: "2026-06-02T11:15:52.7770301+03:00"
+    created: "2026-06-16T19:07:13.275447+03:00"
     description: zookeeper helm chart
     digest: 3b5f704c8b1e5aa2600641b287bd5e21426c00c47e66da6482c95c4c917dd257
     name: zookeeper
@@ -73,4 +87,4 @@ entries:
     urls:
     - https://42wms.github.io/chart-test/zookeeper-0.1.0.tgz
     version: 0.1.0
-generated: "2026-06-02T11:15:52.75179+03:00"
+generated: "2026-06-16T19:07:13.2456765+03:00"

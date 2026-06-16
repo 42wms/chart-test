@@ -13,6 +13,13 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+Secret name for env variables.
+*/}}
+{{- define "app.envSecretName" -}}
+{{- printf "%s-env-secret" (include "app.name" .) | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
 Common labels
 */}}
 {{- define "app.labels" -}}

@@ -35,7 +35,7 @@ Create `values-test.yaml` for testing chart template.
 
 Get template.
 ```bash
-helm template my-traefik-ingress ./traefik-ingress/ -n my-ns-traefik-ingress -f ./traefik-ingress/values-test.yaml > temp-01.yaml
-helm template my-zookeeper ./zookeeper/ -n my-ns-zookeeper -f ./zookeeper/values-test.yaml > temp-01.yaml
-helm template my-app ./app/ -n my-ns-app -f ./app/values-test.yaml > temp-01.yaml
+helm template my-traefik-ingress ./traefik-ingress/ -n my-ns-traefik-ingress -f ./traefik-ingress/values-test.yaml --debug > temp-ti.yaml
+helm template my-zookeeper ./zookeeper/ -n my-ns-zookeeper -f ./zookeeper/values-test.yaml --debug > temp-zk.yaml
+helm template my-app ./app/ -n my-ns-app -f ./app/values-test.yaml --debug > temp-app.yaml
 ```

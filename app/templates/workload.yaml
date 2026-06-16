@@ -69,13 +69,58 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if ne .Values.automountServiceAccountToken "" }}
+      automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
+      {{- end }}
       serviceAccountName: {{ include "app.serviceAccountName" . }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.dnsPolicy }}
+      dnsPolicy: {{ . }}
+      {{- end }}
+      {{- with .Values.dnsConfig }}
+      dnsConfig:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with .Values.hostAliases }}
       hostAliases:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if ne .Values.hostIPC "" }}
+      hostIPC: {{ .Values.hostIPC }}
+      {{- end }}
+      {{- with .Values.hostname }}
+      hostname: {{ . }}
+      {{- end }}
+      {{- with .Values.hostnameOverride }}
+      hostnameOverride: {{ . }}
+      {{- end }}
+      {{- if ne .Values.hostNetwork "" }}
+      hostNetwork: {{ .Values.hostNetwork }}
+      {{- end }}
+      {{- if ne .Values.hostPID "" }}
+      hostPID: {{ .Values.hostPID }}
+      {{- end }}
+      {{- if ne .Values.hostUsers "" }}
+      hostUsers: {{ .Values.hostUsers }}
+      {{- end }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      {{- with .Values.resourceClaims }}
+      resourceClaims:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.runtimeClassName }}
+      runtimeClassName: {{ . }}
+      {{- end }}
+      {{- if ne .Values.terminationGracePeriodSeconds "" }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.initContainers }}
@@ -86,134 +131,18 @@ spec:
         {{- if .Values.jaegerAgent.enabled }}
         - name: jaeger-agent
           image: "jaegertracing/jaeger-agent:{{ .Values.jaegerAgent.version }}"
-          imagePullPolicy: IfNotPresent
-          ports:
-          {{- range .Values.jaegerAgent.ports }}
-            - name: {{ .name }}
-              containerPort: {{ .containerPort }}
-              protocol: {{ .protocol }}
-          {{- end }}
+          {{- include "container.imagePullPolicy" .Values.jaegerAgent | nindent 10 -}}
+          {{- include "container.ports" .Values.jaegerAgent | nindent 10 -}}
           args:
             - --reporter.grpc.host-port=dns:///jaeger-collector-headless.{{ .Values.jaegerAgent.namespace }}:14250
             - --reporter.type=grpc
         {{- end }}
-
         - name: {{ include "app.name" . }}
-          {{- with .Values.securityContext }}
-          securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: {{ toJson .Values.command }}
-          args: {{ toJson .Values.args }}
-          {{- if or .Values.envFrom .Values.envSecret }}
-          envFrom:
-            {{- with .Values.envSecret }}
-            - secretRef:
-                name: {{ template "app.name" $ }}-env-secret
-            {{- end }}
-            {{- with .Values.envFrom }}
-            {{- toYaml . | nindent 12 }}
-            {{- end }}
-          {{- end }}
-          {{- with .Values.env }}
-          env:
-          {{- range $name, $value := . }}
-            {{- $_ := required (printf "%s value required" $name) $value }}
-            {{- if kindIs "map" $value }}
-            - name: {{ $name | quote }}
-              valueFrom:
-                {{- toYaml $value | nindent 16 }}
-            {{- end }}
-          {{- end }}
-          {{- range $name, $value := . }}
-            {{- $_ := required (printf "%s value required" $name) $value }}
-            {{- if not (kindIs "map" $value) }}
-            - name: {{ $name | quote }}
-              value: {{ $value | quote }}
-            {{- end }}
-          {{- end }}
-          {{- end }}
-          {{- with .Values.ports }}
-          ports:
-          {{- range . }}
-            - name: {{ .name }}
-              containerPort: {{ .containerPort }}
-              protocol: {{ .protocol }}
-          {{- end }}
-          {{- end }}
-          {{- with .Values.lifecycle }}
-          lifecycle:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.livenessProbe }}
-          livenessProbe:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.readinessProbe }}
-          readinessProbe:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.resources }}
-          resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.volumeMounts }}
-          volumeMounts:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-      {{- if or .Values.volumesConfigMap.enable .Values.volumesExistingConfigMap.enable .Values.volumesExistingSecret.enable .Values.volumesSecret.enable .Values.volumesHostPathMap.enable .Values.sharedVolumes }}
+          {{- $containerType := "appContainer" }}
+          {{- include "container.spec" (list $ .Values $containerType) | nindent 10 -}}
+      {{- if include "volumes.spec" $ }}
       volumes:
-        {{- if .Values.volumesConfigMap.enable }}
-        {{- with .Values.volumesConfigMap.volumes }}
-        {{- range . }}
-        - name: {{ .name }}
-          configMap:
-            name: {{ template "app.name" $ }}-file-{{ .name }}
-        {{- end }}
-        {{- end }}
-        {{- end }}
-        {{- if .Values.volumesExistingConfigMap.enable }}
-        {{- with .Values.volumesExistingConfigMap.volumes }}
-        {{- range . }}
-        - name: {{ .name }}
-          configMap:
-            name: {{ .name }}
-        {{- end }}
-        {{- end }}
-        {{- end }}
-        {{- if .Values.volumesExistingSecret.enable }}
-        {{- with .Values.volumesExistingSecret.volumes }}
-        {{- range . }}
-        - name: {{ .name }}
-          secret:
-            secretName: {{ .name }}
-        {{- end }}
-        {{- end }}
-        {{- end }}
-        {{- if .Values.volumesSecret.enable }}
-        {{- with .Values.volumesSecret.volumes }}
-        {{- range . }}
-        - name: {{ .name }}
-          secret:
-            secretName: {{ template "app.name" $ }}-file-{{ .name }}-secret
-        {{- end }}
-        {{- end }}
-        {{- end }}
-        {{- if .Values.volumesHostPathMap.enable }}
-        {{- with .Values.volumesHostPathMap.volumes }}
-        {{- range . }}
-        - name: {{ .name }}
-          hostPath:
-            path: {{ .path }}
-            type: {{ .type }}
-        {{- end }}
-        {{- end }}
-        {{- end }}
-        {{- if .Values.sharedVolumes }}
-        {{- include "sharedVolumes.spec" $ | nindent 8 }}
-        {{- end }}
+        {{- include "volumes.spec" $ | nindent 8 }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
