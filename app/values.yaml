@@ -154,7 +154,7 @@ imagePullSecrets: []
 jaegerAgent:
   enabled: false
   namespace: observability
-  version: 1.22.0
+  version: 1.47.0
   image:
     pullPolicy: IfNotPresent
   ports:

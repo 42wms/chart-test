@@ -130,7 +130,7 @@ spec:
       containers:
         {{- if .Values.jaegerAgent.enabled }}
         - name: jaeger-agent
-          image: "jaegertracing/jaeger-agent:{{ .Values.jaegerAgent.version }}"
+          image: "public.ecr.aws/edenlabllc/ext.jaegertracing-jaeger-agent:{{ .Values.jaegerAgent.version }}"
           {{- include "container.imagePullPolicy" .Values.jaegerAgent | nindent 10 -}}
           {{- include "container.ports" .Values.jaegerAgent | nindent 10 -}}
           args:
