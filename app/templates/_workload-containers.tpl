@@ -1,6 +1,16 @@
 {{- define "container.restartPolicy" -}}
-restartPolicy: {{ .restartPolicy | default "OnFailure" }}
+{{- $ := index . 0}}
+{{- $containerType := index . 2 }}
+{{- with index . 1 -}}
+{{- if eq $containerType "initContainer" -}}
+restartPolicy: {{ .containerRestartPolicy | default "Always" }}
+{{- else }}
+{{- with .containerRestartPolicy -}}
+restartPolicy: {{ . }}
+{{- end }}
+{{- end }}
 {{ end }}
+{{- end }}
 
 {{- define "container.securityContext" -}}
 {{- with .securityContext -}}
@@ -164,7 +174,7 @@ only renders the fields that follow it.
 {{- $ := index . 0}}
 {{- $containerType := index . 2 }}
 {{- with index . 1 -}}
-{{- include "container.restartPolicy" . }}
+{{- include "container.restartPolicy" (list $ . $containerType) }}
 {{- include "container.securityContext" . }}
 {{- include "container.image" . }}
 {{- include "container.imagePullPolicy" . }}

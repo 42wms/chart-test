@@ -195,8 +195,9 @@ initContainers: {}
   #     # - resourceName: memory
   #     #   restartPolicy: RestartContainer
   #   # Setting restartPolicy: "Always" makes this a sidecar container.
-  #   # Defaults to "OnFailure" when not specified or empty.
-  #   restartPolicy: Always
+  #   # Possible enum values: "Always", "Never" or "OnFailure".
+  #   # Defaults to "Always" when not specified or empty.
+  #   containerRestartPolicy: Always
   #   # restartPolicyRules gives fine-grained, per-exit-code restart control
   #   # (K8s 1.36+). Evaluated in order against the container's exit code to
   #   # decide whether it restarts. Useful for treating specific codes as
@@ -332,8 +333,12 @@ resourceClaims: []
 #   #     claims:
 #   #       - name: gpu-claim
 
-# Do not restarting container after finished, used Never
+# Only for Job pod. Do not restarting container after finished, used "Never".
 restartPolicy: Never
+
+# Only for App container.
+# Possible enum values: "Always", "Never" or "OnFailure".
+# containerRestartPolicy: Always
 
 # restartPolicyRules gives fine-grained, per-exit-code restart control
 # (K8s 1.36+). Evaluated in order against the container's exit code to
