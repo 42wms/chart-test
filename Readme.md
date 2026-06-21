@@ -39,3 +39,20 @@ helm template my-traefik-ingress ./traefik-ingress/ -n my-ns-traefik-ingress -f 
 helm template my-zookeeper ./zookeeper/ -n my-ns-zookeeper -f ./zookeeper/values-test.yaml --debug > temp-zk.yaml
 helm template my-app ./app/ -n my-ns-app -f ./app/values-test.yaml --debug > temp-app.yaml
 ```
+
+## Unit tests
+
+Install plugin for Helm v3
+```bash
+helm plugin install https://github.com/helm-unittest/helm-unittest
+```
+
+Install plugin for Helm v4
+```bash
+helm plugin install https://github.com/helm-unittest/helm-unittest --verify=false
+```
+
+Run unit-testa
+```bash
+helm unittest ./app/
+```

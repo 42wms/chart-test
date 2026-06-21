@@ -1,0 +1,107 @@
+suite: config-map
+templates:
+  - config-map.yaml
+release:
+  name: app
+  namespace: default
+tests:
+  # --- Default behaviour ---
+  - it: renders nothing by default (volumesConfigMap.enable=false)
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # --- Base rendering (independent of any workload) ---
+  - it: renders a ConfigMap from volumesConfigMap without a workload
+    set:
+      deployment: false
+      job: false
+      volumesConfigMap:
+        enable: true
+        volumes:
+          - name: cfg
+            files:
+              - name: app.json
+                data: |
+                  {"key":"value"}
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+      - isAPIVersion:
+          of: v1
+      - equal:
+          path: metadata.name
+          value: app-file-cfg
+      - matchRegex:
+          path: data["app.json"]
+          pattern: '"key":"value"'
+
+  - it: carries the common chart labels
+    set:
+      volumesConfigMap:
+        enable: true
+        volumes:
+          - name: cfg
+            files:
+              - name: a
+                data: x
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: Helm
+
+  # --- Critical parameter changes ---
+  - it: renders one ConfigMap per volume entry
+    set:
+      volumesConfigMap:
+        enable: true
+        volumes:
+          - name: one
+            files:
+              - { name: a, data: "1" }
+          - name: two
+            files:
+              - { name: b, data: "2" }
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: places multiple files into the same ConfigMap
+    set:
+      volumesConfigMap:
+        enable: true
+        volumes:
+          - name: cfg
+            files:
+              - { name: a.conf, data: "AAA" }
+              - { name: b.conf, data: "BBB" }
+    asserts:
+      - matchRegex:
+          path: data["a.conf"]
+          pattern: AAA
+      - matchRegex:
+          path: data["b.conf"]
+          pattern: BBB
+
+  - it: merges common and configMap annotations
+    set:
+      annotations:
+        common.io/team: platform
+      configMap:
+        annotations:
+          config.io/reload: "true"
+      volumesConfigMap:
+        enable: true
+        volumes:
+          - name: cfg
+            files:
+              - { name: a, data: x }
+    asserts:
+      - equal:
+          path: metadata.annotations["common.io/team"]
+          value: platform
+      - equal:
+          path: metadata.annotations["config.io/reload"]
+          value: "true"

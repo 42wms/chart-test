@@ -1,0 +1,115 @@
+suite: service
+templates:
+  - service.yaml
+release:
+  name: app
+  namespace: default
+tests:
+  # --- Default behaviour ---
+  - it: renders nothing by default (service.enable=false)
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # --- Base rendering when enabled ---
+  - it: renders a Service when enabled
+    set:
+      service:
+        enable: true
+        type: ClusterIP
+        ports:
+          - port: 50051
+            targetPort: 50051
+            protocol: TCP
+            name: grpc
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Service
+      - isAPIVersion:
+          of: v1
+      - equal:
+          path: metadata.name
+          value: app
+      - equal:
+          path: spec.type
+          value: ClusterIP
+
+  - it: maps each declared port entry
+    set:
+      service:
+        enable: true
+        ports:
+          - port: 50051
+            targetPort: 50051
+            protocol: TCP
+            name: grpc
+    asserts:
+      - lengthEqual:
+          path: spec.ports
+          count: 1
+      - equal:
+          path: spec.ports[0]
+          value:
+            port: 50051
+            targetPort: 50051
+            protocol: TCP
+            name: grpc
+
+  - it: wires the selector to the app selector labels
+    set:
+      service:
+        enable: true
+        ports: []
+    asserts:
+      - equal:
+          path: spec.selector["app.kubernetes.io/name"]
+          value: app
+      - equal:
+          path: spec.selector["app.kubernetes.io/instance"]
+          value: app
+
+  # --- Critical parameter changes ---
+  - it: honors a non-default service type
+    set:
+      service:
+        enable: true
+        type: LoadBalancer
+        ports: []
+    asserts:
+      - equal:
+          path: spec.type
+          value: LoadBalancer
+
+  - it: supports multiple ports
+    set:
+      service:
+        enable: true
+        ports:
+          - { port: 80, targetPort: 8080, protocol: TCP, name: http }
+          - { port: 443, targetPort: 8443, protocol: TCP, name: https }
+    asserts:
+      - lengthEqual:
+          path: spec.ports
+          count: 2
+      - equal:
+          path: spec.ports[1].name
+          value: https
+
+  - it: merges common and service annotations
+    set:
+      service:
+        enable: true
+        ports: []
+        annotations:
+          service.io/internal: "true"
+      annotations:
+        common.io/team: platform
+    asserts:
+      - equal:
+          path: metadata.annotations["service.io/internal"]
+          value: "true"
+      - equal:
+          path: metadata.annotations["common.io/team"]
+          value: platform

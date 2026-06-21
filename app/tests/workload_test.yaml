@@ -1,0 +1,357 @@
+suite: workload
+templates:
+  - workload.yaml
+  - config-map.yaml
+  - secret.yaml
+release:
+  name: app
+  namespace: default
+tests:
+  # ---------------------------------------------------------------------------
+  # Default behaviour
+  # ---------------------------------------------------------------------------
+  - it: renders a Deployment by default
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: workload.yaml
+      - isKind:
+          of: Deployment
+        template: workload.yaml
+      - isAPIVersion:
+          of: apps/v1
+        template: workload.yaml
+      - equal:
+          path: metadata.name
+          value: app
+        template: workload.yaml
+
+  - it: applies default replicaCount and strategy
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+        template: workload.yaml
+      - equal:
+          path: spec.strategy.type
+          value: RollingUpdate
+        template: workload.yaml
+      - equal:
+          path: spec.strategy.rollingUpdate.maxSurge
+          value: 1
+        template: workload.yaml
+      - equal:
+          path: spec.strategy.rollingUpdate.maxUnavailable
+          value: 0
+        template: workload.yaml
+
+  - it: wires the selector and pod labels
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/name"]
+          value: app
+        template: workload.yaml
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/instance"]
+          value: app
+        template: workload.yaml
+
+  - it: injects the default linkerd pod annotation
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["linkerd.io/inject"]
+          value: enabled
+        template: workload.yaml
+
+  - it: sets the service account and a single app container by default
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: app
+        template: workload.yaml
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1
+        template: workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: app
+        template: workload.yaml
+
+  - it: omits optional pod-level fields when left at their empty defaults
+    asserts:
+      - notExists:
+          path: spec.template.spec.automountServiceAccountToken
+        template: workload.yaml
+      - notExists:
+          path: spec.template.spec.hostNetwork
+        template: workload.yaml
+      - notExists:
+          path: spec.template.spec.terminationGracePeriodSeconds
+        template: workload.yaml
+      - notExists:
+          path: spec.template.spec.initContainers
+        template: workload.yaml
+      - notExists:
+          path: spec.template.spec.volumes
+        template: workload.yaml
+
+  # ---------------------------------------------------------------------------
+  # Job vs Deployment
+  # ---------------------------------------------------------------------------
+  - it: renders a Job when job=true and deployment=false
+    set:
+      deployment: false
+      job: true
+    asserts:
+      - isKind:
+          of: Job
+        template: workload.yaml
+      - isAPIVersion:
+          of: batch/v1
+        template: workload.yaml
+      - matchRegex:
+          path: metadata.name
+          pattern: ^app-[a-z0-9]{5}$
+        template: workload.yaml
+      - equal:
+          path: spec.backoffLimit
+          value: 4
+        template: workload.yaml
+      - equal:
+          path: spec.ttlSecondsAfterFinished
+          value: 600
+        template: workload.yaml
+      - equal:
+          path: spec.template.spec.restartPolicy
+          value: Never
+        template: workload.yaml
+      - notExists:
+          path: spec.replicas
+        template: workload.yaml
+      - notExists:
+          path: spec.strategy
+        template: workload.yaml
+
+  - it: renders nothing when neither deployment nor job is set
+    set:
+      deployment: false
+      job: false
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: workload.yaml
+
+  # ---------------------------------------------------------------------------
+  # jaegerAgent sidecar
+  # ---------------------------------------------------------------------------
+  - it: adds the jaeger-agent sidecar as the first container when enabled
+    set:
+      jaegerAgent:
+        enabled: true
+        namespace: observability
+        version: 1.47.0
+        image:
+          pullPolicy: IfNotPresent
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 2
+        template: workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: jaeger-agent
+        template: workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "public.ecr.aws/edenlabllc/ext.jaegertracing-jaeger-agent:1.47.0"
+        template: workload.yaml
+      - equal:
+          path: spec.template.spec.containers[1].name
+          value: app
+        template: workload.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --reporter.type=grpc
+        template: workload.yaml
+
+  - it: keeps a single container when jaegerAgent is disabled
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1
+        template: workload.yaml
+
+  # ---------------------------------------------------------------------------
+  # envSecret -> envFrom on the app container
+  # ---------------------------------------------------------------------------
+  - it: mounts the env secret via envFrom when envSecret is set
+    set:
+      envSecret:
+        DB_PASSWORD: s3cr3t
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            secretRef:
+              name: app-env-secret
+        template: workload.yaml
+      - exists:
+          path: spec.template.metadata.annotations["checksum/secret"]
+        template: workload.yaml
+
+  - it: adds a configmap checksum annotation when volumesConfigMap is enabled
+    set:
+      volumesConfigMap:
+        enable: true
+        volumes:
+          - name: cfg
+            files:
+              - name: a.json
+                data: "{}"
+    asserts:
+      - exists:
+          path: spec.template.metadata.annotations["checksum/configmap"]
+        template: workload.yaml
+
+  # ---------------------------------------------------------------------------
+  # initContainers (ordering + sidecar restartPolicy)
+  # ---------------------------------------------------------------------------
+  - it: renders init containers ordered by their .order field
+    set:
+      initContainers:
+        runsSecond:
+          order: 20
+          image: { repository: busybox, tag: "1", pullPolicy: IfNotPresent }
+        runsFirst:
+          order: 10
+          image: { repository: alpine, tag: "3", pullPolicy: IfNotPresent }
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.initContainers
+          count: 2
+        template: workload.yaml
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: runsFirst
+        template: workload.yaml
+      - equal:
+          path: spec.template.spec.initContainers[1].name
+          value: runsSecond
+        template: workload.yaml
+
+  - it: defaults an init container restartPolicy to Always (sidecar form)
+    set:
+      initContainers:
+        setup:
+          order: 10
+          image: { repository: busybox, tag: "1", pullPolicy: IfNotPresent }
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].restartPolicy
+          value: Always
+        template: workload.yaml
+
+  # ---------------------------------------------------------------------------
+  # Volumes
+  # ---------------------------------------------------------------------------
+  - it: renders a configmap-backed volume when volumesConfigMap is enabled
+    set:
+      volumesConfigMap:
+        enable: true
+        volumes:
+          - name: cfg
+            files:
+              - name: a.json
+                data: |
+                  {}
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: cfg
+            configMap:
+              name: app-file-cfg
+          template: workload.yaml
+        template: workload.yaml
+
+  - it: passes sharedVolumes through verbatim
+    set:
+      sharedVolumes:
+        cache:
+          emptyDir: {}
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: cache
+            emptyDir: {}
+        template: workload.yaml
+
+  # ---------------------------------------------------------------------------
+  # Critical pod-level parameters
+  # ---------------------------------------------------------------------------
+  - it: honors a non-default replicaCount
+    set:
+      replicaCount: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+        template: workload.yaml
+
+  - it: renders automountServiceAccountToken only when explicitly set
+    set:
+      automountServiceAccountToken: false
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false
+        template: workload.yaml
+
+  - it: renders security-sensitive host flags only when set
+    set:
+      hostNetwork: true
+      hostPID: true
+    asserts:
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: workload.yaml
+      - equal:
+          path: spec.template.spec.hostPID
+          value: true
+        template: workload.yaml
+
+  - it: applies nodeSelector, tolerations and affinity passthrough
+    set:
+      nodeSelector:
+        disktype: ssd
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: app
+          effect: NoSchedule
+      affinity:
+        nodeAffinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector.disktype
+          value: ssd
+        template: workload.yaml
+      - equal:
+          path: spec.template.spec.tolerations[0].key
+          value: dedicated
+        template: workload.yaml
+      - exists:
+          path: spec.template.spec.affinity
+        template: workload.yaml
+
+  - it: sets terminationGracePeriodSeconds when provided
+    set:
+      terminationGracePeriodSeconds: 60
+    asserts:
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 60
+        template: workload.yaml

@@ -204,15 +204,15 @@ init containers must actually run in. This template restores explicit
 ordering using each container's `.order` field.
 */}}
 {{- define "initContainers.sorted" -}}
-{{- $indexed := dict }}
-{{- $containerType := "initContainer" }}
+{{- $indexed := dict -}}
+{{- $containerType := "initContainer" -}}
 {{- range $name, $container := $.Values.initContainers -}}
   {{- $key := printf "%03d_%s" ($container.order | int) $name -}}
   {{- $_ := set $indexed $key $name -}}
 {{- end -}}
 {{- range $key := (keys $indexed | sortAlpha) -}}
 {{- $name := index $indexed $key -}}
-{{- $container := index $.Values.initContainers $name -}}
+{{- $container := index $.Values.initContainers $name }}
 - name: {{ $name }}
   {{- include "container.spec" (list $ $container $containerType) | nindent 2 }}
 {{- end }}

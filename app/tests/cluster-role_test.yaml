@@ -1,0 +1,110 @@
+suite: cluster-role
+templates:
+  - cluster-role.yaml
+release:
+  name: app
+  namespace: default
+tests:
+  # --- Default behaviour ---
+  - it: renders nothing by default (clusterRole.create=false)
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # --- Base rendering when enabled ---
+  - it: renders a ClusterRole and a ClusterRoleBinding when enabled
+    set:
+      clusterRole:
+        create: true
+        rules:
+          - apiGroups: [""]
+            resources: ["services"]
+            verbs: ["get", "list", "watch"]
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: first document is the ClusterRole
+    documentIndex: 0
+    set:
+      clusterRole:
+        create: true
+        rules:
+          - apiGroups: [""]
+            resources: ["nodes"]
+            verbs: ["get"]
+    asserts:
+      - isKind:
+          of: ClusterRole
+      - isAPIVersion:
+          of: rbac.authorization.k8s.io/v1
+      - equal:
+          path: metadata.name
+          value: app
+      - equal:
+          path: rules[0].resources[0]
+          value: nodes
+
+  - it: second document is the ClusterRoleBinding wired to the ServiceAccount
+    documentIndex: 1
+    set:
+      clusterRole:
+        create: true
+        rules: []
+    asserts:
+      - isKind:
+          of: ClusterRoleBinding
+      - equal:
+          path: roleRef.kind
+          value: ClusterRole
+      - equal:
+          path: roleRef.name
+          value: app
+      - equal:
+          path: roleRef.apiGroup
+          value: rbac.authorization.k8s.io
+      - equal:
+          path: subjects[0].kind
+          value: ServiceAccount
+      - equal:
+          path: subjects[0].name
+          value: app
+      - equal:
+          path: subjects[0].namespace
+          value: default
+
+  # --- Critical parameter changes ---
+  - it: passes through the supplied rules verbatim
+    documentIndex: 0
+    set:
+      clusterRole:
+        create: true
+        rules:
+          - apiGroups: ["rbac.authorization.k8s.io"]
+            resources: ["clusterroles"]
+            verbs: ["get", "list", "watch"]
+    asserts:
+      - equal:
+          path: rules[0].apiGroups[0]
+          value: rbac.authorization.k8s.io
+      - lengthEqual:
+          path: rules[0].verbs
+          count: 3
+
+  - it: applies merged common and clusterRole labels
+    documentIndex: 0
+    set:
+      labels:
+        env: prod
+      clusterRole:
+        create: true
+        rules: []
+        labels:
+          scope: cluster
+    asserts:
+      - equal:
+          path: metadata.labels.env
+          value: prod
+      - equal:
+          path: metadata.labels.scope
+          value: cluster

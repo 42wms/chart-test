@@ -24,7 +24,7 @@ args: []
 # automountServiceAccountToken controls whether the SA token is auto-mounted
 # into the pod. Set to false to harden pods that don't call the K8s API.
 # Leave empty ("") to inherit cluster/ServiceAccount default.
-automountServiceAccountToken: ""
+automountServiceAccountToken:
 # automountServiceAccountToken: false
 
 # Common values for cluster role and binding
@@ -60,7 +60,7 @@ deployment: true
 # Valid values: "ClusterFirst" (default), "ClusterFirstWithHostNet",
 # "Default", "None". Use "None" when supplying a fully custom dnsConfig.
 # When hostNetwork is true, prefer "ClusterFirstWithHostNet".
-dnsPolicy: ""
+dnsPolicy:
 # dnsPolicy: "ClusterFirstWithHostNet"
 
 # dnsConfig provides custom DNS settings, merged with dnsPolicy (or used
@@ -80,7 +80,7 @@ dnsConfig: {}
 # (Docker-link style). Defaults to true in K8s; set false to avoid env
 # clutter and speed up pod startup in namespaces with many services.
 # Leave empty ("") to keep the cluster default.
-enableServiceLinks: ""
+enableServiceLinks:
 # enableServiceLinks: false
 
 env: {}
@@ -112,34 +112,34 @@ hostAliases: []
 # that need host-level shared memory (e.g. some monitoring/HPC tools).
 # Security-sensitive — keep false unless required.
 # By default: false
-hostIPC: ""
+hostIPC:
 
 # hostname sets an explicit hostname inside the pod instead of the
 # system-assigned one. Note: with replicas > 1 all pods share this name,
 # so this fits single-replica use cases.
-hostname: ""
+hostname:
 
 # hostnameOverride sets an arbitrary FQDN as the pod's hostname (alpha,
 # K8s 1.34+). Requires the HostnameOverride feature gate to be enabled,
 # otherwise the API rejects the pod. Takes precedence over hostname/subdomain.
-hostnameOverride: ""
+hostnameOverride:
 
 # hostNetwork attaches the pod directly to the node's network namespace.
 # The pod then uses the host's IPs/ports. Security-sensitive and can cause
 # port conflicts; pair with dnsPolicy "ClusterFirstWithHostNet".
 # By default: false
-hostNetwork: ""
+hostNetwork:
 
 # hostPID shares the host's PID namespace, making host processes visible
 # inside the pod. Only for node-level agents/debuggers. Security-sensitive.
 # By default: false
-hostPID: ""
+hostPID:
 
 # hostUsers controls user-namespace isolation. Set false to enable a
 # dedicated user namespace so in-container root maps to an unprivileged
 # host UID (stronger isolation). Empty/true keeps host user namespace.
 # By default: true
-hostUsers: ""
+hostUsers:
 
 image:
   repository: ""
@@ -294,7 +294,7 @@ ports: []
 
 # priorityClassName assigns a PriorityClass, influencing scheduling order
 # and preemption. The named PriorityClass must already exist in the cluster.
-priorityClassName: ""
+priorityClassName:
 
 readinessProbe: {}
 
@@ -376,7 +376,7 @@ role:
 # runtimeClassName selects a non-default container runtime (e.g. gVisor,
 # Kata Containers) for sandboxing/isolation. The RuntimeClass must exist
 # in the cluster. Empty uses the default runtime.
-runtimeClassName: ""
+runtimeClassName:
 #  runtimeClassName: "gvisor"
 
 # Common values for all secrets
@@ -443,7 +443,7 @@ strategy:
 # sending SIGKILL during pod shutdown. Increase for apps needing clean
 # draining (databases, queues, long requests).
 # By default: 30
-terminationGracePeriodSeconds: ""
+terminationGracePeriodSeconds:
 #  terminationGracePeriodSeconds: 60
 
 tolerations: []
@@ -513,7 +513,7 @@ volumesSecret:
 
 # workingDir overrides the container's working directory. If empty, the
 # image's default (WORKDIR) is used. Must be an absolute path.
-workingDir: ""
+workingDir:
 #  workingDir: "/app"
 
 # Common values for workloads (deployment, job)
