@@ -17,9 +17,13 @@ tests:
       clusterRole:
         create: true
         rules:
-          - apiGroups: [""]
-            resources: ["services"]
-            verbs: ["get", "list", "watch"]
+          - apiGroups: []
+            resources:
+              - services
+            verbs:
+              - get
+              - list
+              - watch
     asserts:
       - hasDocuments:
           count: 2
@@ -30,9 +34,11 @@ tests:
       clusterRole:
         create: true
         rules:
-          - apiGroups: [""]
-            resources: ["nodes"]
-            verbs: ["get"]
+          - apiGroups: []
+            resources:
+              - nodes
+            verbs:
+              - get
     asserts:
       - isKind:
           of: ClusterRole
@@ -80,9 +86,14 @@ tests:
       clusterRole:
         create: true
         rules:
-          - apiGroups: ["rbac.authorization.k8s.io"]
-            resources: ["clusterroles"]
-            verbs: ["get", "list", "watch"]
+          - apiGroups:
+              - rbac.authorization.k8s.io
+            resources:
+              - clusterroles
+            verbs:
+              - get
+              - list
+              - watch
     asserts:
       - equal:
           path: rules[0].apiGroups[0]

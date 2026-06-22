@@ -17,9 +17,13 @@ tests:
       role:
         create: true
         rules:
-          - apiGroups: [""]
-            resources: ["pods"]
-            verbs: ["get", "list", "watch"]
+          - apiGroups: []
+            resources:
+              - pods
+            verbs:
+              - get
+              - list
+              - watch
     asserts:
       - hasDocuments:
           count: 2
@@ -30,9 +34,11 @@ tests:
       role:
         create: true
         rules:
-          - apiGroups: [""]
-            resources: ["pods"]
-            verbs: ["get"]
+          - apiGroups: []
+            resources:
+              - pods
+            verbs:
+              - get
     asserts:
       - isKind:
           of: Role
@@ -77,9 +83,13 @@ tests:
       role:
         create: true
         rules:
-          - apiGroups: ["apps"]
-            resources: ["deployments"]
-            verbs: ["get", "list"]
+          - apiGroups:
+              - apps
+            resources:
+              - deployments
+            verbs:
+              - get
+              - list
     asserts:
       - equal:
           path: rules[0].apiGroups[0]

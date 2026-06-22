@@ -87,8 +87,14 @@ tests:
       service:
         enable: true
         ports:
-          - { port: 80, targetPort: 8080, protocol: TCP, name: http }
-          - { port: 443, targetPort: 8443, protocol: TCP, name: https }
+          - port: 80
+            targetPort: 8080
+            protocol: TCP
+            name: http
+          - port: 443
+            targetPort: 8443
+            protocol: TCP
+            name: https
     asserts:
       - lengthEqual:
           path: spec.ports

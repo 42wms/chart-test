@@ -60,10 +60,12 @@ tests:
         volumes:
           - name: one
             files:
-              - { name: a, data: "1" }
+              - name: a
+                data: "1"
           - name: two
             files:
-              - { name: b, data: "2" }
+              - name: b
+                data: "2"
     asserts:
       - hasDocuments:
           count: 2
@@ -97,7 +99,8 @@ tests:
         volumes:
           - name: cfg
             files:
-              - { name: a, data: x }
+              - name: a
+                data: x
     asserts:
       - equal:
           path: metadata.annotations["common.io/team"]

@@ -222,10 +222,16 @@ tests:
       initContainers:
         runsSecond:
           order: 20
-          image: { repository: busybox, tag: "1", pullPolicy: IfNotPresent }
+          image:
+            repository: busybox
+            tag: "1"
+            pullPolicy: IfNotPresent
         runsFirst:
           order: 10
-          image: { repository: alpine, tag: "3", pullPolicy: IfNotPresent }
+          image:
+            repository: alpine
+            tag: "3"
+            pullPolicy: IfNotPresent
     asserts:
       - lengthEqual:
           path: spec.template.spec.initContainers
@@ -245,7 +251,10 @@ tests:
       initContainers:
         setup:
           order: 10
-          image: { repository: busybox, tag: "1", pullPolicy: IfNotPresent }
+          image:
+            repository: busybox
+            tag: "1"
+            pullPolicy: IfNotPresent
     asserts:
       - equal:
           path: spec.template.spec.initContainers[0].restartPolicy
