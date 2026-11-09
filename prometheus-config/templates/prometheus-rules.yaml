@@ -4,7 +4,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: {{ include "prometheus-config.fullname" $ }}-kube-prom-{{ $name }}
+  name: {{ include "prometheus-config.name" $ }}-kube-prom-{{ $name }}
   labels:
     {{- include "prometheus-config.labels" $ | nindent 4 }}
     {{- with $.Values.prometheusRuleLabels }}
