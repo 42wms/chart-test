@@ -7,6 +7,7 @@ Add helmchart new version.
 helm package ./traefik-ingress --destination ./docs
 helm package ./zookeeper --destination ./docs
 helm package ./app --destination ./docs
+helm package ./prometheus-config --destination ./docs
 ```
 
 Update `index.yaml`.
@@ -27,6 +28,8 @@ Install chart.
 ```bash
 helm install my-traefik chart-test/traefik-ingress
 helm install my-zookeeper chart-test/zookeeper
+helm install my-app chart-test/app
+helm install my-prometheus-config chart-test/prometheus-config
 ```
 
 ## Testing chart template
@@ -38,6 +41,7 @@ Get template.
 helm template my-traefik-ingress ./traefik-ingress/ -n my-ns-traefik-ingress -f ./traefik-ingress/values-test.yaml --debug > temp-ti.yaml
 helm template my-zookeeper ./zookeeper/ -n my-ns-zookeeper -f ./zookeeper/values-test.yaml --debug > temp-zk.yaml
 helm template my-app ./app/ -n my-ns-app -f ./app/values-test.yaml --debug > temp-app.yaml
+helm template my-prometheus-config ./prometheus-config/ -n my-ns-prometheus-config -f ./prometheus-config/values-test.yaml --debug > temp-prom.yaml
 ```
 
 ## Unit tests

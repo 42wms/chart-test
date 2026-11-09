@@ -1,0 +1,16 @@
+{{- range $name, $prometheusRule := .Values.prometheusRulesMap }}
+{{- with $prometheusRule }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "prometheus-config.fullname" $ }}-kube-prom-{{ $name }}
+  labels:
+    {{- include "prometheus-config.labels" $ | nindent 4 }}
+    {{- with $.Values.prometheusRuleLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
+{{- end }}

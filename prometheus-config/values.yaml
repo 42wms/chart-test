@@ -1,0 +1,25 @@
+# Override the full name (used for PrometheusRuls and resource naming)
+# If set, this will be used directly, ignoring nameOverride
+# If not set, the name will be generated based on Release.Name and nameOverride
+fullnameOverride: ""
+
+# Override the chart name (used in resource naming)
+# If set, replaces "prometheus-config" in the generated resource names
+nameOverride: ""
+
+# Additional labels to add to PrometheusRule resources.
+# These labels can be used by Prometheus ruleSelector to discover
+# and load the generated rules.
+prometheusRuleLabels: {}
+  # release: prometheus-stack
+
+# PrometheusRule resources to create.
+# Each map key is used as part of the generated resource name,
+# and its value is rendered as the spec of the corresponding PrometheusRule.
+prometheusRulesMap: {}
+  # rule-name:
+  #   groups:
+  #     - name: my_group
+  #       rules:
+  #         - record: my_record
+  #           expr: 100 * my_record
